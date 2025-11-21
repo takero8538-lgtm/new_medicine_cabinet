@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>薬品棚検索アプリ</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+    <!-- 🔼 タイトル -->
+  <h1 style="margin-bottom: 16px;">薬品棚検索アプリ</h1>
+  
+  <!-- 🔼 モード切り替えボタン（JSで中身を描画） -->
+  <div id="modeSwitch" class="footer" style="margin-bottom: 12px;"></div>
+
+  <!-- 🔽 アプリ本体（Canvas, Toolbar, InfoPanel, SearchPanelなど） -->
+  <div id="app"></div>
+
+  <!-- ES Modules -->
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

@@ -65,8 +65,8 @@ body {
   position: relative;
   grid-column: 1;
   grid-row: 2;
-  width: 80%;   /* 親セル幅いっぱい */
-  height: 80%;  /* 親セル高さいっぱい */
+  width: 70%;   /* 親セル幅いっぱい */
+  height: 70%;  /* 親セル高さいっぱい */
   align-self: start;
   justify-self: start;
 }
@@ -340,7 +340,3 @@ svg rect.highlight {
     width: 100%;
   }
 }
-
-
-
-

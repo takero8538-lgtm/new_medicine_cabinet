@@ -5,9 +5,9 @@ body {
 
 /* 共通ボタンスタイル */
 #modeSwitch {
-  display: inline-block;   /* 横並びにする */
-  margin-left: 20%;        /* 画面幅の20%だけ右にずらす */
-  gap: 12px;               /* ボタン間のスペース */
+  display: inline-block;
+  margin-left: 20%;
+  gap: 12px;
   margin-bottom: 12px;
   width: 30%;
 }
@@ -18,20 +18,19 @@ body {
   background: #f7f7f7;
   cursor: pointer;
   width: 50%;
-  font-size: 1.2em; 
+  font-size: 1.2em;
 }
 
-/* 選択中モードを黄色＋太字に */
 #modeSwitch button.active {
   background: yellow;
   color: black;
   font-weight: bold;
 }
 
-/* 編集モード用レイアウト（2×2分割） */
+/* 編集モード用レイアウト（横分割） */
 #app.edit-mode {
   display: grid;
-  grid-template-columns: 4fr 1fr;
+  grid-template-columns: 4fr 1fr;   /* 左80% : 右20% */
   grid-template-rows: auto auto;
   gap: 16px;
   align-items: start;
@@ -45,17 +44,19 @@ body {
   gap: 16px;
 }
 
-/* 🔽 SearchPanel の配置 */
+/* SearchPanel */
 .search-panel {
   grid-column: 1;
   grid-row: 1;
 }
 
-/* 🔽 Canvas の配置 */
+/* Canvas配置 */
 #app.edit-mode .canvas-wrap {
   position: relative;
   grid-column: 1;
-  grid-row: 1 / span 2;
+  grid-row: 1 / span 2;   /* 左列を縦2行分占有 */
+  width: 100%;
+  height: 100%;
   align-self: start;
   justify-self: start;
 }
@@ -64,22 +65,19 @@ body {
   position: relative;
   grid-column: 1;
   grid-row: 2;
+  width: 100%;   /* 親セル幅いっぱい */
+  height: 100%;  /* 親セル高さいっぱい */
   align-self: start;
   justify-self: start;
 }
 
-/* 🔽 SVGの比率をCanvas.jsから渡された値で固定 */
+/* SVGの比率固定 */
 #app.edit-mode .canvas-wrap svg,
 #app.search-mode .canvas-wrap svg {
-  width: 350%;
-  height: auto;
+  width: 100%;
+  height: 100%;
   aspect-ratio: var(--svg-aspect);
   display: block;
-}
-
-#app.search-mode .canvas-wrap svg {
-  margin-left: 0;
-  margin-right: auto;
 }
 
 svg {
@@ -106,7 +104,7 @@ svg {
   filter: drop-shadow(0 0 2px #66a);
 }
 
-/* 🔽 InfoPanel の配置 */
+/* InfoPanel配置 */
 #app.edit-mode .infopanel {
   border: 1px solid #ddd;
   padding: 12px;
@@ -141,7 +139,7 @@ svg {
   padding: 8px 12px;
 }
 
-/* 🔽 Toolbar の配置 */
+/* Toolbar配置 */
 #app.edit-mode .toolbar {
   display: flex;
   flex-direction: column;
@@ -173,7 +171,7 @@ svg {
   background: #eee;
 }
 
-/* 🔽 フッター */
+/* フッター */
 .footer {
   grid-column: 1 / -1;
   display: flex;
@@ -181,7 +179,7 @@ svg {
   margin-top: 12px;
 }
 
-/* 🔽 予測候補を浮かせて図を押し下げない */
+/* 予測候補 */
 #searchBox {
   position: relative;
   width: 300px;
@@ -216,7 +214,7 @@ svg {
   background-color: #eee;
 }
 
-/* 🔽 ハイライト用 */
+/* ハイライト */
 svg rect.highlight {
   stroke: red;
   stroke-width: 4;
@@ -252,7 +250,7 @@ svg rect.highlight {
   background: #eee;
 }
 
-/* ====== カスタムモーダル ====== */
+/* カスタムモーダル */
 .fp-modal {
   position: fixed;
   inset: 0;
@@ -286,7 +284,7 @@ svg rect.highlight {
   justify-content: flex-end;
 }
 
-/* ====== 追加: ファイル選択UIカスタマイズ ====== */
+/* ファイル選択UI */
 .visually-hidden-file {
   position: absolute;
   left: -9999px;
@@ -314,3 +312,32 @@ svg rect.highlight {
   margin-left: 8px;
   color: #555;
 }
+
+/* 縦長画面対応: 編集モードでツールバーを下に */
+@media (orientation: portrait) {
+  #app.edit-mode {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  #app.edit-mode .canvas-wrap {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    height: 60%;
+  }
+
+  #app.edit-mode .toolbar {
+    grid-column: 1;
+    grid-row: 2;
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  #app.edit-mode .infopanel {
+    grid-column: 1;
+    grid-row: 3;
+    width: 100%;
+  }
+}
+

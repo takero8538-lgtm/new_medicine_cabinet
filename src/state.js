@@ -9,6 +9,9 @@ export const state = {
   mode: "select",        // select | draw-line
   tempLine: null,        // 線仮置き
 
+  // 操作状態を追加
+  interaction: null,     // { type: 'move'|'resize'|'rotate', id, startX, startY, lastX, lastY }
+
   // キャンバスサイズ
   canvasWidth: 1600,
   canvasHeight: 1000,

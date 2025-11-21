@@ -5,10 +5,14 @@
   <title>薬品棚検索アプリ</title>
   <link rel="stylesheet" href="assets/styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+  <!-- 🔽 PWA関連 -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#2196f3" />
 </head>
 <body>
 
-    <!-- 🔼 タイトル -->
+  <!-- 🔼 タイトル -->
   <h1 style="margin-bottom: 16px;">薬品棚検索アプリ</h1>
   
   <!-- 🔼 モード切り替えボタン（JSで中身を描画） -->
@@ -19,5 +23,14 @@
 
   <!-- ES Modules -->
   <script type="module" src="./src/main.js"></script>
+
+  <!-- 🔽 Service Worker登録（必要なら） -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(reg => console.log("Service Worker registered:", reg))
+        .catch(err => console.log("Service Worker registration failed:", err));
+    }
+  </script>
 </body>
 </html>

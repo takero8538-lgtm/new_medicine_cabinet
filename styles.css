@@ -1,0 +1,316 @@
+body {
+  font-family: system-ui, sans-serif;
+  margin: 16px;
+}
+
+/* 共通ボタンスタイル */
+#modeSwitch {
+  display: inline-block;   /* 横並びにする */
+  margin-left: 20%;        /* 画面幅の20%だけ右にずらす */
+  gap: 12px;               /* ボタン間のスペース */
+  margin-bottom: 12px;
+  width: 30%;
+}
+
+#modeSwitch button {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  background: #f7f7f7;
+  cursor: pointer;
+  width: 50%;
+  font-size: 1.2em; 
+}
+
+/* 選択中モードを黄色＋太字に */
+#modeSwitch button.active {
+  background: yellow;
+  color: black;
+  font-weight: bold;
+}
+
+/* 編集モード用レイアウト（2×2分割） */
+#app.edit-mode {
+  display: grid;
+  grid-template-columns: 4fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 16px;
+  align-items: start;
+}
+
+/* 検索モード用レイアウト（縦分割） */
+#app.search-mode {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+  gap: 16px;
+}
+
+/* 🔽 SearchPanel の配置 */
+.search-panel {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* 🔽 Canvas の配置 */
+#app.edit-mode .canvas-wrap {
+  position: relative;
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: start;
+  justify-self: start;
+}
+
+#app.search-mode .canvas-wrap {
+  position: relative;
+  grid-column: 1;
+  grid-row: 2;
+  align-self: start;
+  justify-self: start;
+}
+
+/* 🔽 SVGの比率をCanvas.jsから渡された値で固定 */
+#app.edit-mode .canvas-wrap svg,
+#app.search-mode .canvas-wrap svg {
+  width: 350%;
+  height: auto;
+  aspect-ratio: var(--svg-aspect);
+  display: block;
+}
+
+#app.search-mode .canvas-wrap svg {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+svg {
+  border: 1px solid #aaa;
+  background: #fafafa;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.grid {
+  stroke: #eee;
+  stroke-width: 1;
+}
+
+.rotate {
+  cursor: grab;
+  fill: #5b8cff;
+  touch-action: none;
+}
+
+.selected rect,
+.selected line,
+.selected text {
+  filter: drop-shadow(0 0 2px #66a);
+}
+
+/* 🔽 InfoPanel の配置 */
+#app.edit-mode .infopanel {
+  border: 1px solid #ddd;
+  padding: 12px;
+  border-radius: 6px;
+  background: #fff;
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: start;
+}
+
+.infopanel h3 {
+  margin: 0 0 8px;
+}
+
+.infopanel .row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.infopanel input,
+.infopanel select {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.infopanel button {
+  margin-top: 8px;
+  padding: 8px 12px;
+}
+
+/* 🔽 Toolbar の配置 */
+#app.edit-mode .toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: start;
+}
+
+.toolbar-top {
+  display: flex;
+  gap: 8px;
+}
+
+.toolbar-polygon {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toolbar button {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  background: #f7f7f7;
+  cursor: pointer;
+}
+
+.toolbar button:hover {
+  background: #eee;
+}
+
+/* 🔽 フッター */
+.footer {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* 🔽 予測候補を浮かせて図を押し下げない */
+#searchBox {
+  position: relative;
+  width: 300px;
+}
+
+#medicineInput {
+  width: 100%;
+  z-index: 1;
+}
+
+#suggestList {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ccc;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  z-index: 10;
+}
+
+#suggestList li {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+#suggestList li:hover {
+  background-color: #eee;
+}
+
+/* 🔽 ハイライト用 */
+svg rect.highlight {
+  stroke: red;
+  stroke-width: 4;
+  fill: red;
+  animation: blinkFill 1s infinite;
+}
+
+@keyframes blinkFill {
+  0%   { stroke: red; fill: rgba(255, 200, 200, 0.6); }
+  50%  { stroke: orange; fill: rgba(255, 150, 150, 0.9); }
+  100% { stroke: red; fill: rgba(255, 200, 200, 0.6); }
+}
+
+.handle {
+  fill: #00f;
+  stroke: #fff;
+  stroke-width: 1;
+  cursor: all-scroll;
+  touch-action: none;
+}
+
+.rotate-handle {
+  fill: #0f0;
+  cursor: grabbing;
+  touch-action: none;
+}
+
+.context-menu div {
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.context-menu div:hover {
+  background: #eee;
+}
+
+/* ====== カスタムモーダル ====== */
+.fp-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.fp-hidden { display: none; }
+
+.fp-modal__dialog {
+  background: #fff;
+  width: min(520px, 90vw);
+  padding: 20px 20px 16px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.fp-modal__title {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+.fp-modal__text {
+  margin: 0 0 16px;
+  color: #444;
+}
+
+.fp-modal__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* ====== 追加: ファイル選択UIカスタマイズ ====== */
+.visually-hidden-file {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.file-button {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #eceff1;
+  border: 1px solid #cfd8dc;
+  border-radius: 4px;
+  color: #333;
+  cursor: pointer;
+  user-select: none;
+}
+
+.file-button:hover {
+  background: #e0e3e7;
+}
+
+.file-status {
+  margin-left: 8px;
+  color: #555;
+}

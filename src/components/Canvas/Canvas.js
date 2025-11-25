@@ -79,33 +79,41 @@ export function Canvas(onUpdate, isEditable = true) {
   handleLineEvents(svg, render, onUpdate);
   handleAddItemEvents(svg, render, onUpdate);
 
-  // 選択→ドラッグ移動処理
+  // 未選択状態ではスクロール・ピンチを許可
+  svg.style.touchAction = "auto";
+
+  // 選択・ドラッグ移動処理
   svg.addEventListener("pointerdown", (e) => {
+    // アイテムまたはグリップにヒットしているか
     let g = e.target.closest("g.item");
     let id = g?.dataset?.id ? g.dataset.id : null;
 
-    // グリップをクリックした場合は選択中アイテムを対象にする
     if (!id && e.target.classList.contains("grip")) {
       id = state.selectedId;
     }
-    if (!id) return;
 
-    // 選択確定
+    // 空白タップなら選択解除＋スクロール許可
+    if (!id) {
+      if (state.selectedId != null) {
+        state.selectedId = null;
+        svg.style.touchAction = "auto"; // 選択解除で元に戻す
+        render(); onUpdate();
+      }
+      return;
+    }
+
+    // 選択確定（選択した瞬間にスクロール・ピンチ禁止へ）
     selectItem(state, id, onUpdate);
+    svg.style.touchAction = "none";
 
     const tag = e.target.tagName.toLowerCase();
     const isShape = ["rect", "line", "text", "tspan", "circle", "path"].includes(tag);
     if (!isShape) return;
 
-    // ★ スクロール・ズームをドラッグ中のみ禁止（SVG全体）
-    // これが無いとモバイルでブラウザがスクロール優先する
-    svg.style.touchAction = "none";
-    // ★ ポインタキャプチャでこの要素にイベントを専有させる
+    // ドラッグ開始時のブラウザ既定挙動も抑制＋キャプチャ
     try {
       e.target.setPointerCapture?.(e.pointerId);
     } catch (_) {}
-
-    // ブラウザの既定挙動（スクロール等）を抑制
     e.preventDefault();
 
     const { x, y } = getSvgPoint(e, svg);
@@ -170,8 +178,9 @@ export function Canvas(onUpdate, isEditable = true) {
       }
     }
 
-    // ★ 解放：スクロール・ズームを元に戻す
-    svg.style.touchAction = "auto";
+    // 操作終了後も「選択中」である限りはスクロール禁止を維持
+    svg.style.touchAction = state.selectedId != null ? "none" : "auto";
+
     try {
       e.target.releasePointerCapture?.(e.pointerId);
     } catch (_) {}

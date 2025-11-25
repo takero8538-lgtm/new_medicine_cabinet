@@ -84,11 +84,14 @@ export function Canvas(onUpdate, isEditable = true) {
     let g = e.target.closest("g.item");
     let id = g?.dataset?.id ? g.dataset.id : null;
 
-    // グリップ(circle)をクリックした場合は選択中アイテムを対象にする
+    // グリップをクリックした場合は選択中アイテムを対象にする
     if (!id && e.target.classList.contains("grip")) {
       id = state.selectedId;
     }
     if (!id) return;
+
+    // ★ 選択されたのでスクロールを止める
+    e.preventDefault();
 
     selectItem(state, id, onUpdate);
 

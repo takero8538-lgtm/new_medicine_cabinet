@@ -65,32 +65,36 @@ export function Canvas(onUpdate, isEditable = true) {
   handleLineEvents(svg, render, onUpdate);
   handleAddItemEvents(svg, render, onUpdate);
 
-  // --- 選択と操作を分離（ID型の正規化を追加） ---
+  // --- 選択と操作を分離 + 非選択時はスクロール専用 ---
   svg.addEventListener("pointerdown", (e) => {
     const g = e.target.closest("g.item");
     const rawId = g?.dataset?.id ?? null;
 
-    // rawId は文字列なので、実アイテムを検索して型付きIDを復元
     const itemByRaw =
       rawId != null ? state.items.find((it) => String(it.id) === String(rawId)) : null;
 
-    // grip を掴んだ場合は既選択IDを使用
     const targetId = itemByRaw?.id ?? (e.target.classList.contains("grip") ? state.selectedId : null);
-    if (targetId == null) return;
+
+    // 非選択状態 → スクロール専用
+    if (!targetId || state.selectedId === null) {
+      state.interaction = null;
+      svg.style.touchAction = "auto"; // スクロール許可
+      return;
+    }
 
     // まだ選択されていない場合は選択だけ
     if (state.selectedId !== targetId) {
-      selectItem(state, targetId, onUpdate); // InfoPanel更新はここで行われる
-      render(); // ハンドルを描画
-      return;   // 操作は開始しない
+      selectItem(state, targetId, onUpdate);
+      render();
+      return;
     }
 
-    // すでに選択済みなら「操作待ち」
+    // 選択済みなら「操作待ち」
     const { x, y } = getSvgPoint(e, svg);
     state.interaction = {
       type: "pending",
-      id: targetId,           // 型付きIDを保持
-      startTarget: e.target,  // 掴んだ要素
+      id: targetId,
+      startTarget: e.target,
       lastX: x,
       lastY: y,
       pending: false,
@@ -110,7 +114,7 @@ export function Canvas(onUpdate, isEditable = true) {
       } else {
         state.interaction.type = "move";
       }
-      svg.style.touchAction = "none"; // 操作開始時にスクロール禁止
+      svg.style.touchAction = "none"; // 編集開始時にスクロール禁止
     }
 
     if (state.interaction.type !== "move") return;

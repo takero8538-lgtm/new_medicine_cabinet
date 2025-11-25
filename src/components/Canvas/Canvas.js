@@ -65,32 +65,32 @@ export function Canvas(onUpdate, isEditable = true) {
   handleLineEvents(svg, render, onUpdate);
   handleAddItemEvents(svg, render, onUpdate);
 
+  // --- 選択と操作を分離（ID型の正規化を追加） ---
   svg.addEventListener("pointerdown", (e) => {
     const g = e.target.closest("g.item");
-    const id = g?.dataset?.id ? g.dataset.id : null;
+    const rawId = g?.dataset?.id ?? null;
 
-    let targetId = id;
-    if (!targetId && e.target.classList.contains("grip")) {
-      targetId = state.selectedId;
+    // rawId は文字列なので、実アイテムを検索して型付きIDを復元
+    const itemByRaw =
+      rawId != null ? state.items.find((it) => String(it.id) === String(rawId)) : null;
+
+    // grip を掴んだ場合は既選択IDを使用
+    const targetId = itemByRaw?.id ?? (e.target.classList.contains("grip") ? state.selectedId : null);
+    if (targetId == null) return;
+
+    // まだ選択されていない場合は選択だけ
+    if (state.selectedId !== targetId) {
+      selectItem(state, targetId, onUpdate); // InfoPanel更新はここで行われる
+      render(); // ハンドルを描画
+      return;   // 操作は開始しない
     }
-    if (!targetId) return;
 
-    selectItem(state, targetId, onUpdate);
-
-    // スクロール禁止
-    svg.style.touchAction = "none";
-    try {
-      e.target.setPointerCapture?.(e.pointerId);
-    } catch (_) {}
-    try {
-      svg.setPointerCapture?.(e.pointerId);
-    } catch (_) {}
-    e.preventDefault();
-
+    // すでに選択済みなら「操作待ち」
     const { x, y } = getSvgPoint(e, svg);
     state.interaction = {
-      type: "move",
-      id: targetId,
+      type: "pending",
+      id: targetId,           // 型付きIDを保持
+      startTarget: e.target,  // 掴んだ要素
       lastX: x,
       lastY: y,
       pending: false,
@@ -98,7 +98,22 @@ export function Canvas(onUpdate, isEditable = true) {
   }, { passive: false });
 
   svg.addEventListener("pointermove", (e) => {
-    if (!state.interaction || state.interaction.type !== "move") return;
+    if (!state.interaction) return;
+
+    // 操作種別の確定
+    if (state.interaction.type === "pending") {
+      const target = state.interaction.startTarget;
+      if (target.classList.contains("handle")) {
+        state.interaction.type = "resize";
+      } else if (target.classList.contains("rotate")) {
+        state.interaction.type = "rotate";
+      } else {
+        state.interaction.type = "move";
+      }
+      svg.style.touchAction = "none"; // 操作開始時にスクロール禁止
+    }
+
+    if (state.interaction.type !== "move") return;
 
     const { x, y } = getSvgPoint(e, svg);
     const dx = x - state.interaction.lastX;
@@ -129,10 +144,10 @@ export function Canvas(onUpdate, isEditable = true) {
   }, { passive: false });
 
   function endInteraction(e) {
-    if (!state.interaction || state.interaction.type !== "move") return;
+    if (!state.interaction) return;
 
     const item = state.items.find((it) => it.id == state.interaction.id);
-    if (item) {
+    if (item && state.interaction.type === "move") {
       if (item.type === "line") {
         item.x1 = snap(item.x1, state.gridSize);
         item.y1 = snap(item.y1, state.gridSize);

@@ -1,6 +1,6 @@
 // src/components/Canvas/rect/RectRenderer.js
 import { state } from "../../../state.js";
-import { selectItem, createLabel } from "../helpers.js";
+import { createLabel } from "../helpers.js";
 import { renderResize } from "./RectResize.js";
 import { renderRotate } from "./RectRotate.js";
 
@@ -10,8 +10,11 @@ export function renderRect(svg, g, item, onUpdate, isEditable) {
   rect.setAttribute("y", item.y);
   rect.setAttribute("width", item.width);
   rect.setAttribute("height", item.height);
-  rect.setAttribute("fill", item.fill || "lightgray");
   rect.setAttribute("stroke", "black");
+
+  // 塗り領域を必ず持たせる（透明でもOK）
+  rect.setAttribute("fill", item.fill || "transparent");
+  rect.setAttribute("pointer-events", "all");
 
   // rect にも data-id を付与（検索ハイライト・編集イベント両対応）
   rect.setAttribute("data-id", item.id);
@@ -20,8 +23,13 @@ export function renderRect(svg, g, item, onUpdate, isEditable) {
 
   // ラベル生成（固定サイズ）
   const label = createLabel(g, item);
+  // ラベルはイベントを奪わないようにする
+  label.setAttribute("pointer-events", "none");
+  [...label.querySelectorAll("tspan")].forEach(ts =>
+    ts.setAttribute("pointer-events", "none")
+  );
 
-  // ★ 回転を初期描画時に反映
+  // 回転を初期描画時に反映
   const cx = item.x + item.width / 2;
   const cy = item.y + item.height / 2;
   g.setAttribute(
@@ -30,13 +38,7 @@ export function renderRect(svg, g, item, onUpdate, isEditable) {
   );
 
   if (isEditable) {
-    // 選択イベント
-    rect.addEventListener("pointerdown", ev => {
-      ev.stopPropagation();
-      selectItem(state, item.id, onUpdate);
-    });
-
-    // ★ リサイズ・回転の呼び出しのみ残す（移動は Canvas.js に統合済み）
+    // ★ リサイズ・回転の呼び出しのみ残す（移動・選択は Canvas.js に統合済み）
     renderResize(svg, rect, label, item, g, onUpdate);
     renderRotate(svg, rect, item, g, onUpdate);
   }

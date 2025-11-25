@@ -52,6 +52,11 @@ export function Canvas(onUpdate, isEditable = true) {
     }
 
     renderHandles(svg, handleGroup, state, onUpdate);
+
+    // 選択状態に応じてクラスを切り替え（CSSでtouch-action制御）
+    wrap.classList.toggle("editing", state.selectedId !== null);
+    wrap.classList.toggle("scrolling", state.selectedId === null);
+
     renderPending = false;
   }
 
@@ -65,10 +70,8 @@ export function Canvas(onUpdate, isEditable = true) {
   handleLineEvents(svg, render, onUpdate);
   handleAddItemEvents(svg, render, onUpdate);
 
-  // 初動ノイズ除去しきい値（スマホ向けは少し大きめでも可）
   const START_THRESHOLD = 8;
 
-  // --- 選択と操作を分離 + 非選択時はスクロール専用 ---
   svg.addEventListener("pointerdown", (e) => {
     const g = e.target.closest("g.item");
     const rawId = g?.dataset?.id ?? null;
@@ -82,23 +85,23 @@ export function Canvas(onUpdate, isEditable = true) {
     // 非選択状態 → スクロール専用
     if (!targetId || state.selectedId === null) {
       state.interaction = null;
-      svg.style.touchAction = "auto"; // スクロール許可
+      wrap.classList.add("scrolling");
+      wrap.classList.remove("editing");
       return;
     }
 
-    // まだ選択されていない場合は「選択だけ」（このタップでは編集開始しない）
+    // まだ選択されていない場合は選択だけ
     if (state.selectedId !== targetId) {
       selectItem(state, targetId, onUpdate);
       render();
       return;
     }
 
-    // 選択済みならこのpointerdown直後からスクロール禁止に固定する
-    // ← 混在回避のため、最初のドラッグ前に禁止しておく
-    svg.style.touchAction = "none";
-    e.preventDefault?.();
+    // 選択済みならスクロール禁止を即適用
+    e.preventDefault();
+    wrap.classList.add("editing");
+    wrap.classList.remove("scrolling");
 
-    // 操作待ち（このタッチ系列で編集開始しうる）
     const { x, y } = getSvgPoint(e, svg);
     state.interaction = {
       type: "pending",
@@ -109,14 +112,13 @@ export function Canvas(onUpdate, isEditable = true) {
       lastX: x,
       lastY: y,
       pending: false,
-      started: false // しきい値を超えて編集が確定したか
+      started: false
     };
   }, { passive: false });
 
   svg.addEventListener("pointermove", (e) => {
     if (!state.interaction) return;
 
-    // 操作種別の仮確定（この時点では種類判定のみ）
     if (state.interaction.type === "pending") {
       const target = state.interaction.startTarget;
       if (target.classList.contains("handle")) {
@@ -132,18 +134,14 @@ export function Canvas(onUpdate, isEditable = true) {
     const dx = x - state.interaction.lastX;
     const dy = y - state.interaction.lastY;
 
-    // 初動しきい値：距離が閾値未満なら編集開始しない（指ブレや座標ノイズを無視）
     if (!state.interaction.started) {
       const totalDx = x - state.interaction.startX;
       const totalDy = y - state.interaction.startY;
       const dist = Math.hypot(totalDx, totalDy);
-      if (dist < START_THRESHOLD) {
-        return;
-      }
-      // 編集確定：座標を再キャプチャして基準リセット（初動ズレを吸収）
-      const { x: nx, y: ny } = getSvgPoint(e, svg);
-      state.interaction.lastX = nx;
-      state.interaction.lastY = ny;
+      if (dist < START_THRESHOLD) return;
+
+      state.interaction.lastX = x;
+      state.interaction.lastY = y;
       state.interaction.started = true;
       return;
     }
@@ -151,7 +149,6 @@ export function Canvas(onUpdate, isEditable = true) {
     state.interaction.lastX = x;
     state.interaction.lastY = y;
 
-    // 軽量化：操作中は対象アイテムのみDOM更新（全体renderはしない）
     if (!state.interaction.pending) {
       state.interaction.pending = true;
       requestAnimationFrame(() => {
@@ -162,11 +159,9 @@ export function Canvas(onUpdate, isEditable = true) {
         }
 
         if (state.interaction.type === "move") {
-          const ddx = dx;
-          const ddy = dy;
           if (item.type === "line") {
-            item.x1 += ddx; item.y1 += ddy;
-            item.x2 += ddx; item.y2 += ddy;
+            item.x1 += dx; item.y1 += dy;
+            item.x2 += dx; item.y2 += dy;
             const lineEl = svg.querySelector(`g.item[data-id="${item.id}"] line`);
             if (lineEl) {
               lineEl.setAttribute("x1", item.x1);
@@ -175,7 +170,7 @@ export function Canvas(onUpdate, isEditable = true) {
               lineEl.setAttribute("y2", item.y2);
             }
           } else {
-            item.x += ddx; item.y += ddy;
+            item.x += dx; item.y += dy;
             const rectEl = svg.querySelector(`g.item[data-id="${item.id}"] rect`);
             if (rectEl) {
               rectEl.setAttribute("x", item.x);
@@ -183,7 +178,6 @@ export function Canvas(onUpdate, isEditable = true) {
             }
           }
         }
-        // resize/rotate は各ファイル側でDOM更新しているためここでは何もしない
         state.interaction.pending = false;
       });
     }
@@ -210,15 +204,10 @@ export function Canvas(onUpdate, isEditable = true) {
       }
     }
 
-    // 操作終了時にスクロール許可へ戻す
-    svg.style.touchAction = "auto";
-
-    // pointer captureの明示解除は不安定要因になりうるため呼ばない
-    // try { e.target.releasePointerCapture?.(e.pointerId); } catch (_) {}
-    // try { svg.releasePointerCapture?.(e.pointerId); } catch (_) {}
-
     state.interaction = null;
-    render(); onUpdate(); // 終了時に全体再描画（ハンドル・ラベル更新）
+    wrap.classList.remove("editing");
+    wrap.classList.add("scrolling");
+    render(); onUpdate();
   }
 
   svg.addEventListener("pointerup", endInteraction, { passive: false });

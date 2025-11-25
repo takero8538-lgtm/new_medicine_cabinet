@@ -7,13 +7,17 @@ export function renderRotate(svg, rect, item, g, onUpdate) {
   const cx = item.x + item.width / 2;
   const cy = item.y + item.height / 2;
 
+  // 端末判定（タッチ対応なら大きめ）
+  const isTouch = navigator.maxTouchPoints > 0;
+  const ROTATE_RADIUS = isTouch ? 12 : 6; // ← 座標系単位で指定
+
   // 回転ハンドル生成
   const rotHandle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
   const topBase = { x: cx, y: item.y - 30 };
   const topInit = rotatePoint(topBase.x, topBase.y, cx, cy, item.rotation || 0);
   rotHandle.setAttribute("cx", topInit.x);
   rotHandle.setAttribute("cy", topInit.y);
-  rotHandle.setAttribute("r", 6);
+  rotHandle.setAttribute("r", ROTATE_RADIUS);
   rotHandle.setAttribute("class", "rotate");
   // iPad/Androidでスクロール誤動作防止
   rotHandle.style.touchAction = "none";

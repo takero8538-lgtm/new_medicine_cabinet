@@ -24,7 +24,10 @@ export function renderRotate(svg, rect, item, g, onUpdate) {
   g.appendChild(rotHandle);
 
   rotHandle.onpointerdown = (e) => {
+    // ★ スクロール誤発火防止
+    e.preventDefault();
     e.stopPropagation();
+
     selectItem(state, item.id, onUpdate);
 
     const startAngle = item.rotation || 0;

@@ -84,8 +84,7 @@ svg {
   border: 1px solid #aaa;
   background: #fafafa;
   user-select: none;
-  /* ← 修正: manipulation から none に変更 */
-  touch-action: none;
+  touch-action: auto;
 }
 
 .grid {
@@ -359,3 +358,4 @@ svg .grip {
 }
 
 /*
+

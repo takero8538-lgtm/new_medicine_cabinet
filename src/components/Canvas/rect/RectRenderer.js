@@ -1,7 +1,6 @@
 // src/components/Canvas/rect/RectRenderer.js
 import { state } from "../../../state.js";
 import { selectItem, createLabel } from "../helpers.js";
-import { renderMove } from "./RectMove.js";
 import { renderResize } from "./RectResize.js";
 import { renderRotate } from "./RectRotate.js";
 
@@ -37,8 +36,7 @@ export function renderRect(svg, g, item, onUpdate, isEditable) {
       selectItem(state, item.id, onUpdate);
     });
 
-    // ★ 移動・リサイズ・回転の呼び出しを追加
-    renderMove(svg, rect, label, item, onUpdate);
+    // ★ リサイズ・回転の呼び出しのみ残す（移動は Canvas.js に統合済み）
     renderResize(svg, rect, label, item, g, onUpdate);
     renderRotate(svg, rect, item, g, onUpdate);
   }

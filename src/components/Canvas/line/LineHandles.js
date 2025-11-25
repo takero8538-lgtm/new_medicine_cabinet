@@ -22,7 +22,10 @@ export function renderHandles(svg, line, item, g, onUpdate) {
 
   function attachHandleDrag(handle, pointKeyX, pointKeyY) {
     handle.onpointerdown = (e) => {
+      // ★ スクロール誤発火防止
+      e.preventDefault();
       e.stopPropagation();
+
       selectItem(state, item.id, onUpdate);
 
       let pending = false;

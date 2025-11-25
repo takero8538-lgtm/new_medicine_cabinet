@@ -65,7 +65,7 @@ export function Canvas(onUpdate, isEditable = true) {
   handleLineEvents(svg, render, onUpdate);
   handleAddItemEvents(svg, render, onUpdate);
 
-  // しきい値（初動ノイズ除去用：座標系単位）
+  // 初動ノイズ除去しきい値（スマホ向けは少し大きめでも可）
   const START_THRESHOLD = 8;
 
   // --- 選択と操作を分離 + 非選択時はスクロール専用 ---
@@ -76,7 +76,8 @@ export function Canvas(onUpdate, isEditable = true) {
     const itemByRaw =
       rawId != null ? state.items.find((it) => String(it.id) === String(rawId)) : null;
 
-    const targetId = itemByRaw?.id ?? (e.target.classList.contains("grip") ? state.selectedId : null);
+    const targetId =
+      itemByRaw?.id ?? (e.target.classList.contains("grip") ? state.selectedId : null);
 
     // 非選択状態 → スクロール専用
     if (!targetId || state.selectedId === null) {
@@ -85,14 +86,19 @@ export function Canvas(onUpdate, isEditable = true) {
       return;
     }
 
-    // まだ選択されていない場合は選択だけ
+    // まだ選択されていない場合は「選択だけ」（このタップでは編集開始しない）
     if (state.selectedId !== targetId) {
       selectItem(state, targetId, onUpdate);
       render();
       return;
     }
 
-    // 選択済みなら「操作待ち」
+    // 選択済みならこのpointerdown直後からスクロール禁止に固定する
+    // ← 混在回避のため、最初のドラッグ前に禁止しておく
+    svg.style.touchAction = "none";
+    e.preventDefault?.();
+
+    // 操作待ち（このタッチ系列で編集開始しうる）
     const { x, y } = getSvgPoint(e, svg);
     state.interaction = {
       type: "pending",
@@ -110,7 +116,7 @@ export function Canvas(onUpdate, isEditable = true) {
   svg.addEventListener("pointermove", (e) => {
     if (!state.interaction) return;
 
-    // 操作種別の仮確定（まだtouchActionは切り替えない）
+    // 操作種別の仮確定（この時点では種類判定のみ）
     if (state.interaction.type === "pending") {
       const target = state.interaction.startTarget;
       if (target.classList.contains("handle")) {
@@ -126,31 +132,26 @@ export function Canvas(onUpdate, isEditable = true) {
     const dx = x - state.interaction.lastX;
     const dy = y - state.interaction.lastY;
 
-    // しきい値判定：初動で一定距離超えたら編集確定
+    // 初動しきい値：距離が閾値未満なら編集開始しない（指ブレや座標ノイズを無視）
     if (!state.interaction.started) {
       const totalDx = x - state.interaction.startX;
       const totalDy = y - state.interaction.startY;
       const dist = Math.hypot(totalDx, totalDy);
-
       if (dist < START_THRESHOLD) {
-        // 初動ノイズは無視（スクロール切替直後のズレ対策）
         return;
       }
-
-      // 編集確定：ここでtouchActionを切り替え、座標を再キャプチャして基準リセット
+      // 編集確定：座標を再キャプチャして基準リセット（初動ズレを吸収）
       const { x: nx, y: ny } = getSvgPoint(e, svg);
       state.interaction.lastX = nx;
       state.interaction.lastY = ny;
       state.interaction.started = true;
-      svg.style.touchAction = "none"; // スクロール禁止は確定後に
-      // 以降のdx/dyはこの再キャプチャ基準で小さく安定
       return;
     }
 
     state.interaction.lastX = x;
     state.interaction.lastY = y;
 
-    // 軽量化：操作中は対象アイテムのみ更新（全体renderはしない）
+    // 軽量化：操作中は対象アイテムのみDOM更新（全体renderはしない）
     if (!state.interaction.pending) {
       state.interaction.pending = true;
       requestAnimationFrame(() => {
@@ -161,11 +162,11 @@ export function Canvas(onUpdate, isEditable = true) {
         }
 
         if (state.interaction.type === "move") {
-          const ddx = dx; const ddy = dy;
+          const ddx = dx;
+          const ddy = dy;
           if (item.type === "line") {
             item.x1 += ddx; item.y1 += ddy;
             item.x2 += ddx; item.y2 += ddy;
-            // 対象lineのみDOM更新
             const lineEl = svg.querySelector(`g.item[data-id="${item.id}"] line`);
             if (lineEl) {
               lineEl.setAttribute("x1", item.x1);
@@ -175,17 +176,14 @@ export function Canvas(onUpdate, isEditable = true) {
             }
           } else {
             item.x += ddx; item.y += ddy;
-            // 対象rectのみDOM更新（ラベルはpointer-events:none）
             const rectEl = svg.querySelector(`g.item[data-id="${item.id}"] rect`);
             if (rectEl) {
               rectEl.setAttribute("x", item.x);
               rectEl.setAttribute("y", item.y);
             }
-            // 回転適用中でもgのtransform中心は同じなので移動はrect更新で十分
           }
         }
-
-        // resize/rotateは、それぞれのファイルでDOM更新しているのでここでは何もしない
+        // resize/rotate は各ファイル側でDOM更新しているためここでは何もしない
         state.interaction.pending = false;
       });
     }
@@ -215,7 +213,7 @@ export function Canvas(onUpdate, isEditable = true) {
     // 操作終了時にスクロール許可へ戻す
     svg.style.touchAction = "auto";
 
-    // 明示的releasePointerCaptureは不安定要因なので外す（tryは残すならOK）
+    // pointer captureの明示解除は不安定要因になりうるため呼ばない
     // try { e.target.releasePointerCapture?.(e.pointerId); } catch (_) {}
     // try { svg.releasePointerCapture?.(e.pointerId); } catch (_) {}
 

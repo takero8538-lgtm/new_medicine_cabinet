@@ -90,14 +90,23 @@ export function Canvas(onUpdate, isEditable = true) {
     }
     if (!id) return;
 
-    // ★ 選択されたのでスクロールを止める
-    e.preventDefault();
-
+    // 選択確定
     selectItem(state, id, onUpdate);
 
     const tag = e.target.tagName.toLowerCase();
     const isShape = ["rect", "line", "text", "tspan", "circle", "path"].includes(tag);
     if (!isShape) return;
+
+    // ★ スクロール・ズームをドラッグ中のみ禁止（SVG全体）
+    // これが無いとモバイルでブラウザがスクロール優先する
+    svg.style.touchAction = "none";
+    // ★ ポインタキャプチャでこの要素にイベントを専有させる
+    try {
+      e.target.setPointerCapture?.(e.pointerId);
+    } catch (_) {}
+
+    // ブラウザの既定挙動（スクロール等）を抑制
+    e.preventDefault();
 
     const { x, y } = getSvgPoint(e, svg);
     state.interaction = {
@@ -107,7 +116,7 @@ export function Canvas(onUpdate, isEditable = true) {
       lastY: y,
       pending: false,
     };
-  });
+  }, { passive: false });
 
   svg.addEventListener("pointermove", (e) => {
     if (!state.interaction || state.interaction.type !== "move") return;
@@ -138,9 +147,9 @@ export function Canvas(onUpdate, isEditable = true) {
         render();
       });
     }
-  });
+  }, { passive: false });
 
-  svg.addEventListener("pointerup", () => {
+  function endInteraction(e) {
     if (!state.interaction || state.interaction.type !== "move") return;
 
     const item = state.items.find((it) => it.id == state.interaction.id);
@@ -161,9 +170,19 @@ export function Canvas(onUpdate, isEditable = true) {
       }
     }
 
+    // ★ 解放：スクロール・ズームを元に戻す
+    svg.style.touchAction = "auto";
+    try {
+      e.target.releasePointerCapture?.(e.pointerId);
+    } catch (_) {}
+
     state.interaction = null;
     render(); onUpdate();
-  });
+  }
+
+  svg.addEventListener("pointerup", endInteraction, { passive: false });
+  svg.addEventListener("pointercancel", endInteraction, { passive: false });
+  svg.addEventListener("pointerleave", endInteraction, { passive: false });
 
   wrap.appendChild(svg);
   return { el: wrap, render };

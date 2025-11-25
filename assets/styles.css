@@ -84,7 +84,8 @@ svg {
   border: 1px solid #aaa;
   background: #fafafa;
   user-select: none;
-  touch-action: manipulation;
+  /* ← 修正: manipulation から none に変更 */
+  touch-action: none;
 }
 
 .grid {
@@ -343,22 +344,18 @@ svg rect.highlight {
 
 /* 補助バー（assist-bar） */
 svg .assist-bar {
-  stroke: #888;          /* グレーで視認性を確保 */
-  stroke-width: 2;       /* 少し太めにして指でも見やすく */
-  pointer-events: none;  /* バー自体は操作対象にしない */
+  stroke: #888;
+  stroke-width: 2;
+  pointer-events: none;
 }
 
 /* グリップ（grip） */
 svg .grip {
-  fill: #aaa;            /* 中塗りは薄いグレー */
-  stroke: #666;          /* 外枠は濃いグレーでコントラスト */
+  fill: #aaa;
+  stroke: #666;
   stroke-width: 1.5;
-  cursor: grab;          /* PC操作時は「掴む」カーソル */
-  touch-action: none;    /* スマホでスクロール誤作動防止 */
+  cursor: grab;
+  touch-action: none;
 }
 
-/* グリップを掴んでいるとき */
-svg .grip:active {
-  fill: #666;            /* 押したときは濃くしてフィードバック */
-  cursor: grabbing;
-}
+/*

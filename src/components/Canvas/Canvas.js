@@ -53,10 +53,6 @@ export function Canvas(onUpdate, isEditable = true) {
 
     renderHandles(svg, handleGroup, state, onUpdate);
 
-    // 選択状態に応じてクラスを切り替え（CSSでtouch-action制御）
-    wrap.classList.toggle("editing", state.selectedId !== null);
-    wrap.classList.toggle("scrolling", state.selectedId === null);
-
     renderPending = false;
   }
 
@@ -82,11 +78,9 @@ export function Canvas(onUpdate, isEditable = true) {
     const targetId =
       itemByRaw?.id ?? (e.target.classList.contains("grip") ? state.selectedId : null);
 
-    // 非選択状態 → スクロール専用
+    // 非選択状態 → 何もせず終了
     if (!targetId || state.selectedId === null) {
       state.interaction = null;
-      wrap.classList.add("scrolling");
-      wrap.classList.remove("editing");
       return;
     }
 
@@ -99,8 +93,6 @@ export function Canvas(onUpdate, isEditable = true) {
 
     // 選択済みならスクロール禁止を即適用
     e.preventDefault();
-    wrap.classList.add("editing");
-    wrap.classList.remove("scrolling");
 
     const { x, y } = getSvgPoint(e, svg);
     state.interaction = {
@@ -205,8 +197,6 @@ export function Canvas(onUpdate, isEditable = true) {
     }
 
     state.interaction = null;
-    wrap.classList.remove("editing");
-    wrap.classList.add("scrolling");
     render(); onUpdate();
   }
 

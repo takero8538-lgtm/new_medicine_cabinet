@@ -1,7 +1,6 @@
 // LineRenderer.js
 import { state } from "../../../state.js";
 import { selectItem } from "../helpers.js";
-import { renderMove } from "./LineMove.js";
 import { renderHandles } from "./LineHandles.js";
 
 export function renderLine(svg, g, item, onUpdate, isEditable) {
@@ -13,16 +12,11 @@ export function renderLine(svg, g, item, onUpdate, isEditable) {
   line.setAttribute("stroke", item.stroke || "#333");
   line.setAttribute("stroke-width", item.strokeWidth || 3);
   line.setAttribute("data-id", item.id);
-  line.addEventListener("pointerdown", ev => {
-  ev.stopPropagation();
-  selectItem(state, item.id, onUpdate);
-});
-
 
   g.appendChild(line);
 
   if (isEditable) {
-    renderMove(svg, line, item, onUpdate);
+    // ★ 移動は Canvas.js に統合済みなので削除
     renderHandles(svg, line, item, g, onUpdate);
   }
 }

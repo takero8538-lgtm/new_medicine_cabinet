@@ -357,5 +357,8 @@ svg .grip {
   touch-action: none;
 }
 
-/*
+.canvas-wrap.editing svg { touch-action: none; overscroll-behavior: contain; }
+.canvas-wrap.scrolling svg { touch-action: auto; }
+
+
 

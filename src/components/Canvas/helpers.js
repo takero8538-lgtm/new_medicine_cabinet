@@ -18,9 +18,22 @@ export function getSvgPoint(ev, svg) {
   return { x, y };
 }
 
-export function selectItem(state, id, onUpdate) {
+// ★ 選択確定時にスクロール禁止へ切り替え
+export function selectItem(state, id, onUpdate, svg) {
   state.selectedId = id;
   onUpdate();
+  if (svg) {
+    svg.style.touchAction = "none";
+  }
+}
+
+// ★ 選択解除時にスクロール許可へ戻す
+export function deselectItem(state, onUpdate, svg) {
+  state.selectedId = null;
+  onUpdate();
+  if (svg) {
+    svg.style.touchAction = "auto";
+  }
 }
 
 // ラベル生成（折り返し対応）

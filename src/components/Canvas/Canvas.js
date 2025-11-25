@@ -5,8 +5,10 @@ import { renderItems } from "./ItemRenderer.js";
 import { renderPreviewLine } from "./PreviewLine.js";
 import { handleLineEvents } from "./LineEvents.js";
 import { handleAddItemEvents } from "./AddItemEvents.js";
-import { getSvgPoint } from "./helpers.js";
+import { getSvgPoint, selectItem } from "./helpers.js";
 import { snap, snapAngle, snapMove } from "../../utils.js";
+// 追加：非回転ハンドル描画
+import { renderHandles } from "./HandleRenderer.js";
 
 export function Canvas(onUpdate, isEditable = true) {
   const wrap = document.createElement("div");
@@ -27,22 +29,32 @@ export function Canvas(onUpdate, isEditable = true) {
 
   svg.style.display = "block";
 
-  // グリッド用グループを作成して追加
+  // グリッド用グループ
   const gridGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
   gridGroup.setAttribute("class", "grid");
   svg.appendChild(gridGroup);
 
-  // グリッド描画（初期化時のみ）
+  // アイテム用グループ
+  const itemsGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  itemsGroup.setAttribute("class", "items");
+  svg.appendChild(itemsGroup);
+
+  // 非回転ハンドル用グループ
+  const handleGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  handleGroup.setAttribute("class", "handles");
+  svg.appendChild(handleGroup);
+
+  // グリッド描画
   renderGrid(svg);
 
   let previewLine = null;
   let renderPending = false;
 
-  // 実際の描画処理
+  // 描画処理
   function doRender() {
-    renderItems(svg, onUpdate, isEditable);
+    itemsGroup.innerHTML = "";
+    renderItems(svg, onUpdate, isEditable, itemsGroup);
 
-    // プレビュー線は draw-line モードのときだけ更新
     if (state.mode === "draw-line") {
       previewLine = renderPreviewLine(svg, previewLine, state);
     } else if (previewLine) {
@@ -50,10 +62,12 @@ export function Canvas(onUpdate, isEditable = true) {
       previewLine = null;
     }
 
+    // ハンドル描画
+    renderHandles(svg, handleGroup, state, onUpdate);
+
     renderPending = false;
   }
 
-  // スケジューラ関数（イベントから呼ばれる）
   function render() {
     if (!renderPending) {
       renderPending = true;
@@ -65,54 +79,66 @@ export function Canvas(onUpdate, isEditable = true) {
   handleLineEvents(svg, render, onUpdate);
   handleAddItemEvents(svg, render, onUpdate);
 
-  // ★ 選択後ドラッグで移動する処理を追加（ログ付き）
+  // 選択→ドラッグ移動処理
   svg.addEventListener("pointerdown", (e) => {
-    console.log("pointerdown", e.target.tagName, "selectedId:", state.selectedId);
+    let g = e.target.closest("g.item");
+    let id = g?.dataset?.id ? g.dataset.id : null;
 
-    const g = e.target.closest("g.item");
-    const id = g?.dataset?.id ? g.dataset.id : null;
-    if (!id || id !== state.selectedId) return;
+    // グリップ(circle)をクリックした場合は選択中アイテムを対象にする
+    if (!id && e.target.classList.contains("grip")) {
+      id = state.selectedId;
+    }
+    if (!id) return;
 
-    const isShape = ["rect", "line", "text", "tspan"].includes(e.target.tagName);
+    selectItem(state, id, onUpdate);
+
+    const tag = e.target.tagName.toLowerCase();
+    const isShape = ["rect", "line", "text", "tspan", "circle", "path"].includes(tag);
     if (!isShape) return;
-
 
     const { x, y } = getSvgPoint(e, svg);
     state.interaction = {
       type: "move",
       id,
-      startX: x,
-      startY: y,
       lastX: x,
       lastY: y,
+      pending: false,
     };
   });
 
   svg.addEventListener("pointermove", (e) => {
     if (!state.interaction || state.interaction.type !== "move") return;
+
     const { x, y } = getSvgPoint(e, svg);
     const dx = x - state.interaction.lastX;
     const dy = y - state.interaction.lastY;
     state.interaction.lastX = x;
     state.interaction.lastY = y;
 
-    console.log("pointermove", "dx:", dx, "dy:", dy, "interaction:", state.interaction);
+    if (!state.interaction.pending) {
+      state.interaction.pending = true;
+      requestAnimationFrame(() => {
+        const item = state.items.find((it) => it.id == state.interaction.id);
+        if (!item) {
+          state.interaction.pending = false;
+          return;
+        }
 
-    const item = state.items.find((it) => it.id == state.interaction.id);
-    if (!item) return;
-    if (item.type === "line") {
-      item.x1 += dx; item.y1 += dy;
-      item.x2 += dx; item.y2 += dy;
-    } else {
-      item.x += dx; item.y += dy;
+        if (item.type === "line") {
+          item.x1 += dx; item.y1 += dy;
+          item.x2 += dx; item.y2 += dy;
+        } else {
+          item.x += dx; item.y += dy;
+        }
+
+        state.interaction.pending = false;
+        render();
+      });
     }
-    render();
   });
 
   svg.addEventListener("pointerup", () => {
     if (!state.interaction || state.interaction.type !== "move") return;
-
-    console.log("pointerup", "interaction:", state.interaction);
 
     const item = state.items.find((it) => it.id == state.interaction.id);
     if (item) {
@@ -131,6 +157,7 @@ export function Canvas(onUpdate, isEditable = true) {
         item.x = s.x; item.y = s.y;
       }
     }
+
     state.interaction = null;
     render(); onUpdate();
   });

@@ -7,12 +7,16 @@ export function renderResize(svg, rect, label, item, g, onUpdate) {
   // 四隅ハンドルの定義
   const corners = ["tl", "tr", "bl", "br"];
 
+  // 端末判定（タッチ対応なら大きめ）
+  const isTouch = navigator.maxTouchPoints > 0;
+  const HANDLE_SIZE = isTouch ? 20 : 10; // ← 座標系単位で指定
+
   corners.forEach(pos => {
     const handle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    handle.setAttribute("width", 8);
-    handle.setAttribute("height", 8);
+    handle.setAttribute("width", HANDLE_SIZE);
+    handle.setAttribute("height", HANDLE_SIZE);
     handle.setAttribute("class", "handle");
-    updateHandlePosition(handle, item, pos);
+    updateHandlePosition(handle, item, pos, HANDLE_SIZE);
     // iPad/Androidでスクロール誤動作防止
     handle.style.touchAction = "none";
     g.appendChild(handle);
@@ -54,7 +58,7 @@ export function renderResize(svg, rect, label, item, g, onUpdate) {
             rect.setAttribute("width", item.width);
             rect.setAttribute("height", item.height);
 
-            updateHandlePosition(handle, item, pos);
+            updateHandlePosition(handle, item, pos, HANDLE_SIZE);
             pending = false;
           });
         }
@@ -79,7 +83,7 @@ export function renderResize(svg, rect, label, item, g, onUpdate) {
         rect.setAttribute("width", item.width);
         rect.setAttribute("height", item.height);
 
-        updateHandlePosition(handle, item, pos);
+        updateHandlePosition(handle, item, pos, HANDLE_SIZE);
 
         // ★ ラベルはここで直接更新せず、onUpdate() に任せて再生成
         onUpdate();
@@ -92,11 +96,11 @@ export function renderResize(svg, rect, label, item, g, onUpdate) {
 }
 
 // ハンドル位置更新関数
-function updateHandlePosition(handle, item, pos) {
+function updateHandlePosition(handle, item, pos, size) {
   let x = item.x;
   let y = item.y;
-  if (pos.includes("r")) x = item.x + item.width - 8;
-  if (pos.includes("b")) y = item.y + item.height - 8;
+  if (pos.includes("r")) x = item.x + item.width - size;
+  if (pos.includes("b")) y = item.y + item.height - size;
   handle.setAttribute("x", x);
   handle.setAttribute("y", y);
 }

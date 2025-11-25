@@ -18,22 +18,16 @@ export function getSvgPoint(ev, svg) {
   return { x, y };
 }
 
-// ★ 選択確定時にスクロール禁止へ切り替え
-export function selectItem(state, id, onUpdate, svg) {
+// 選択確定（スクロール禁止の切り替えは Canvas.js 側で行う）
+export function selectItem(state, id, onUpdate) {
   state.selectedId = id;
   onUpdate();
-  if (svg) {
-    svg.style.touchAction = "none";
-  }
 }
 
-// ★ 選択解除時にスクロール許可へ戻す
-export function deselectItem(state, onUpdate, svg) {
+// 選択解除（スクロール許可の切り替えは Canvas.js 側で行う）
+export function deselectItem(state, onUpdate) {
   state.selectedId = null;
   onUpdate();
-  if (svg) {
-    svg.style.touchAction = "auto";
-  }
 }
 
 // ラベル生成（折り返し対応）
@@ -65,7 +59,6 @@ export function createLabel(g, item) {
     // 高さ制約を超える場合は省略記号を付けて打ち切り
     const currentY = yStart + idx * fontSize * lineHeight;
     if (currentY + fontSize > item.y + item.height * 1.05) {
-      // 5%だけはみ出し許容、それ以上は打ち切り
       const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
       tspan.textContent = "…";
       tspan.setAttribute("x", item.x + item.width / 2);

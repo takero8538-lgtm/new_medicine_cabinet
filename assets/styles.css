@@ -590,7 +590,6 @@ svg .grip {
   cursor: grab;
   touch-action: none;
 }
-}
 
 .canvas-wrap.editing svg {
   touch-action: none;   /* 選択中は編集専用 */
@@ -598,4 +597,5 @@ svg .grip {
 .canvas-wrap.scrolling svg {
   touch-action: auto;   /* 未選択時はスクロール・ピンチズーム許可 */
 }
+
 

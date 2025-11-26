@@ -12,9 +12,9 @@ export const state = {
   // 操作状態を追加
   interaction: null,     // { type: 'move'|'resize'|'rotate', id, startX, startY, lastX, lastY }
 
-  // キャンバスサイズ
-  canvasWidth: 1600,
-  canvasHeight: 1000,
+  // キャンバスサイズ（唯一の定義箇所）
+  canvasWidth: 1200,
+  canvasHeight: 900,
 
   // Excelから読み込んだ薬データを保持
   medicineData: null,
@@ -43,7 +43,6 @@ export function nextAlphaId(items, prefix) {
 
 // 保存処理：IndexedDBに履歴として保存
 export async function save() {
-  // IDが無い要素には必ず付与
   state.items.forEach(it => {
     if (it.id == null || it.id === "") {
       if (it.type === "shelf") {
@@ -55,26 +54,24 @@ export async function save() {
       } else if (it.type === "line") {
         it.id = nextAlphaId(state.items, "L");
       } else {
-        it.id = nextAlphaId(state.items, "X"); // その他予備
+        it.id = nextAlphaId(state.items, "X");
       }
     }
   });
   await saveFloorplan(state.items);
 
-  // 薬データも保存（ファイル名付き）
   if (state.medicineData) {
     await saveMedicineData(state.medicineData, state.medicineMeta?.fileName);
   }
 }
 
-// 読み込み処理：IndexedDBから最新データを取得
+// 読み込み処理
 export async function load() {
   const latest = await loadLatestFloorplan();
   if (latest && Array.isArray(latest)) {
     state.items = latest;
   }
 
-  // 薬データも読み込み（ファイル名付き）
   const med = await loadMedicineData();
   if (med && Array.isArray(med.data)) {
     state.medicineData = med.data;

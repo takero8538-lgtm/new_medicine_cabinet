@@ -5,10 +5,6 @@
   <title>薬品棚検索アプリ</title>
   <link rel="stylesheet" href="assets/styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
-  <!-- 🔽 PWA関連 -->
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#2196f3" />
 </head>
 <body>
 
@@ -21,16 +17,20 @@
   <!-- 🔽 アプリ本体（Canvas, Toolbar, InfoPanel, SearchPanelなど） -->
   <div id="app"></div>
 
+  <!-- 🔽 履歴読み込みモーダル -->
+  <div class="fp-modal fp-hidden" id="historyModal">
+    <div class="fp-modal__dialog">
+      <h2 class="fp-modal__title">履歴一覧</h2>
+      <div class="fp-modal__body">
+        <!-- 履歴リストをJSで挿入 -->
+      </div>
+      <div class="fp-modal__actions">
+        <button id="closeHistoryBtn">閉じる</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ES Modules -->
   <script type="module" src="./src/main.js"></script>
-
-  <!-- 🔽 Service Worker登録（必要なら） -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(reg => console.log("Service Worker registered:", reg))
-        .catch(err => console.log("Service Worker registration failed:", err));
-    }
-  </script>
 </body>
 </html>

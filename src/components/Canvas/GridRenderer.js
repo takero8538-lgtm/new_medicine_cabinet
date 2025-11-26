@@ -15,9 +15,10 @@ export function renderGrid(svg) {
     grid.removeChild(grid.firstChild);
   }
 
-  grid.setAttribute("shape-rendering", "crispEdges");
+  // 属性設定（線が消えにくいように調整）
+  grid.setAttribute("shape-rendering", "geometricPrecision");
   grid.setAttribute("pointer-events", "none");
-  grid.setAttribute("vector-effect", "non-scaling-stroke");
+  grid.removeAttribute("vector-effect"); // non-scaling-strokeは外す
 
   const vb = svg.viewBox.baseVal;
   const minX = vb.x;
@@ -27,25 +28,25 @@ export function renderGrid(svg) {
 
   const step = Number(state.gridSize) || 20;
   const EPS = 1e-6;
-  const inset = 0.5;
 
   const startX = minX;
-  const endX = minX + width - inset;
+  const endX = minX + width;
   const startY = minY;
-  const endY = minY + height - inset;
+  const endY = minY + height;
 
   // 縦線
   {
     const firstX = Math.ceil((startX + EPS) / step) * step;
     for (let x = firstX; x <= endX + EPS; x += step) {
+      const ix = Math.round(x); // 整数に揃える
       const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      l.setAttribute("x1", x);
+      l.setAttribute("x1", ix);
       l.setAttribute("y1", startY);
-      l.setAttribute("x2", x);
+      l.setAttribute("x2", ix);
       l.setAttribute("y2", startY + height);
       grid.appendChild(l);
     }
-    const rightX = minX + width - inset;
+    const rightX = Math.round(endX);
     const right = document.createElementNS("http://www.w3.org/2000/svg", "line");
     right.setAttribute("x1", rightX);
     right.setAttribute("y1", startY);
@@ -58,14 +59,15 @@ export function renderGrid(svg) {
   {
     const firstY = Math.ceil((startY + EPS) / step) * step;
     for (let y = firstY; y <= endY + EPS; y += step) {
+      const iy = Math.round(y); // 整数に揃える
       const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
       l.setAttribute("x1", startX);
-      l.setAttribute("y1", y);
+      l.setAttribute("y1", iy);
       l.setAttribute("x2", startX + width);
-      l.setAttribute("y2", y);
+      l.setAttribute("y2", iy);
       grid.appendChild(l);
     }
-    const bottomY = minY + height - inset;
+    const bottomY = Math.round(endY);
     const bottom = document.createElementNS("http://www.w3.org/2000/svg", "line");
     bottom.setAttribute("x1", startX);
     bottom.setAttribute("y1", bottomY);

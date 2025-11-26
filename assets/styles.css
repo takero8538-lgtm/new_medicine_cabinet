@@ -597,5 +597,4 @@ svg .grip {
 .canvas-wrap.scrolling svg {
   touch-action: auto;   /* 未選択時はスクロール・ピンチズーム許可 */
 }
-
-
+}

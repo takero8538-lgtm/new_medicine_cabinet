@@ -24,9 +24,10 @@ export function renderResize(svg, rect, label, item, g, onUpdate) {
     // ヒット判定用の透明円（大きめ）
     const hit = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     hit.setAttribute("r", HIT_RADIUS);
-    hit.setAttribute("class", "handle");
     updateHandlePositionCircle(hit, item, pos);
+    // 完全に透明化（CSSの.handleを上書き）
     hit.setAttribute("fill", "transparent");
+    hit.setAttribute("stroke", "transparent");
     hit.style.pointerEvents = "auto"; // 判定はこちら
     hit.style.touchAction = "none";
     g.appendChild(hit);

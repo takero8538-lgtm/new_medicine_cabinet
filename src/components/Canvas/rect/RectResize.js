@@ -9,14 +9,15 @@ export function renderResize(svg, rect, label, item, g, onUpdate) {
 
   // 端末判定（タッチ対応なら大きめ）
   const isTouch = navigator.maxTouchPoints > 0;
-  const HANDLE_SIZE = isTouch ? 20 : 10; // ← 座標系単位で指定
+  const HANDLE_SIZE = isTouch ? 20 : 15; // ← 座標系単位で指定
+  const HANDLE_RADIUS = HANDLE_SIZE / 2;
 
   corners.forEach(pos => {
-    const handle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    handle.setAttribute("width", HANDLE_SIZE);
-    handle.setAttribute("height", HANDLE_SIZE);
+    // ★ 四角形から円に変更
+    const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    handle.setAttribute("r", HANDLE_RADIUS);
     handle.setAttribute("class", "handle");
-    updateHandlePosition(handle, item, pos, HANDLE_SIZE);
+    updateHandlePositionCircle(handle, item, pos);
     // iPad/Androidでスクロール誤動作防止
     handle.style.touchAction = "none";
     g.appendChild(handle);
@@ -61,7 +62,7 @@ export function renderResize(svg, rect, label, item, g, onUpdate) {
             rect.setAttribute("width", item.width);
             rect.setAttribute("height", item.height);
 
-            updateHandlePosition(handle, item, pos, HANDLE_SIZE);
+            updateHandlePositionCircle(handle, item, pos);
             pending = false;
           });
         }
@@ -86,7 +87,7 @@ export function renderResize(svg, rect, label, item, g, onUpdate) {
         rect.setAttribute("width", item.width);
         rect.setAttribute("height", item.height);
 
-        updateHandlePosition(handle, item, pos, HANDLE_SIZE);
+        updateHandlePositionCircle(handle, item, pos);
 
         // ★ ラベルはここで直接更新せず、onUpdate() に任せて再生成
         onUpdate();
@@ -98,12 +99,12 @@ export function renderResize(svg, rect, label, item, g, onUpdate) {
   });
 }
 
-// ハンドル位置更新関数
-function updateHandlePosition(handle, item, pos, size) {
-  let x = item.x;
-  let y = item.y;
-  if (pos.includes("r")) x = item.x + item.width - size;
-  if (pos.includes("b")) y = item.y + item.height - size;
-  handle.setAttribute("x", x);
-  handle.setAttribute("y", y);
+// 円ハンドル位置更新関数
+function updateHandlePositionCircle(handle, item, pos) {
+  let cx = item.x;
+  let cy = item.y;
+  if (pos.includes("r")) cx = item.x + item.width;
+  if (pos.includes("b")) cy = item.y + item.height;
+  handle.setAttribute("cx", cx);
+  handle.setAttribute("cy", cy);
 }

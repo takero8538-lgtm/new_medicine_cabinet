@@ -9,7 +9,7 @@ export function renderResize(svg, rect, label, item, g, onUpdate) {
 
   // 端末判定（タッチ対応なら大きめ）
   const isTouch = navigator.maxTouchPoints > 0;
-  const HANDLE_SIZE = isTouch ? 20 : 15; // ← 座標系単位で指定
+  const HANDLE_SIZE = isTouch ? 40 : 15; // ← 座標系単位で指定
   const HANDLE_RADIUS = HANDLE_SIZE / 2;
 
   corners.forEach(pos => {
@@ -108,3 +108,4 @@ function updateHandlePositionCircle(handle, item, pos) {
   handle.setAttribute("cx", cx);
   handle.setAttribute("cy", cy);
 }
+

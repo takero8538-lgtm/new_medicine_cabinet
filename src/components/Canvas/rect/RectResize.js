@@ -7,23 +7,32 @@ export function renderResize(svg, rect, label, item, g, onUpdate) {
   // 四隅ハンドルの定義
   const corners = ["tl", "tr", "bl", "br"];
 
-  // 端末判定（タッチ対応なら大きめ）
+  // 端末判定（タッチ対応ならヒット判定を大きめ）
   const isTouch = navigator.maxTouchPoints > 0;
-  const HANDLE_SIZE = isTouch ? 80 : 30; // ← 座標系単位で指定
-  const HANDLE_RADIUS = HANDLE_SIZE / 2;
+  const VISUAL_RADIUS = 10;                  // 見た目用の半径
+  const HIT_RADIUS = isTouch ? 80 : 40;      // ヒット判定用の半径
 
   corners.forEach(pos => {
-    // ★ 四角形から円に変更
-    const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    handle.setAttribute("r", HANDLE_RADIUS);
-    handle.setAttribute("class", "handle");
-    updateHandlePositionCircle(handle, item, pos);
-    // iPad/Androidでスクロール誤動作防止
-    handle.style.touchAction = "none";
-    g.appendChild(handle);
+    // 見た目用の円（小さめ）
+    const visual = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    visual.setAttribute("r", VISUAL_RADIUS);
+    visual.setAttribute("class", "handle");
+    updateHandlePositionCircle(visual, item, pos);
+    visual.style.pointerEvents = "none"; // 判定には使わない
+    g.appendChild(visual);
 
-    handle.onpointerdown = (e) => {
-      // ★ スクロール誤発火防止
+    // ヒット判定用の透明円（大きめ）
+    const hit = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    hit.setAttribute("r", HIT_RADIUS);
+    hit.setAttribute("class", "handle");
+    updateHandlePositionCircle(hit, item, pos);
+    hit.setAttribute("fill", "transparent");
+    hit.style.pointerEvents = "auto"; // 判定はこちら
+    hit.style.touchAction = "none";
+    g.appendChild(hit);
+
+    hit.onpointerdown = (e) => {
+      // スクロール誤発火防止
       e.preventDefault();
       e.stopPropagation();
 
@@ -62,7 +71,8 @@ export function renderResize(svg, rect, label, item, g, onUpdate) {
             rect.setAttribute("width", item.width);
             rect.setAttribute("height", item.height);
 
-            updateHandlePositionCircle(handle, item, pos);
+            updateHandlePositionCircle(visual, item, pos);
+            updateHandlePositionCircle(hit, item, pos);
             pending = false;
           });
         }
@@ -87,9 +97,10 @@ export function renderResize(svg, rect, label, item, g, onUpdate) {
         rect.setAttribute("width", item.width);
         rect.setAttribute("height", item.height);
 
-        updateHandlePositionCircle(handle, item, pos);
+        updateHandlePositionCircle(visual, item, pos);
+        updateHandlePositionCircle(hit, item, pos);
 
-        // ★ ラベルはここで直接更新せず、onUpdate() に任せて再生成
+        // ラベルはここで直接更新せず、onUpdate() に任せて再生成
         onUpdate();
       };
 
@@ -108,6 +119,3 @@ function updateHandlePositionCircle(handle, item, pos) {
   handle.setAttribute("cx", cx);
   handle.setAttribute("cy", cy);
 }
-
-
-

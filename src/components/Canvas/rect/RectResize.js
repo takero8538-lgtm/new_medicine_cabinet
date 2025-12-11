@@ -28,6 +28,7 @@ export function renderResize(svg, rect, label, item, g, onUpdate) {
     // 完全に透明化（CSSの.handleを上書き）
     hit.setAttribute("fill", "transparent");
     hit.setAttribute("stroke", "transparent");
+    hit.setAttribute("class", "handle-hit");
     hit.style.pointerEvents = "auto"; // 判定はこちら
     hit.style.touchAction = "none";
     g.appendChild(hit);
@@ -120,3 +121,4 @@ function updateHandlePositionCircle(handle, item, pos) {
   handle.setAttribute("cx", cx);
   handle.setAttribute("cy", cy);
 }
+

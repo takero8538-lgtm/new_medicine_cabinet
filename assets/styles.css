@@ -236,13 +236,23 @@ svg rect.highlight {
   100% { stroke: red; fill: rgba(255, 200, 200, 0.6); }
 }
 
+/* 見た目用ハンドル（青丸） */
 .handle {
   fill: #00f;
   stroke: #fff;
   stroke-width: 1;
-  cursor: grabbing;
+  cursor: grab;   /* 掴む前は開いた手 */
   touch-action: none;
 }
+
+/* ヒット判定用ハンドル（透明円） */
+.handle-hit {
+  cursor: grab;   /* 透明でもカーソルは手アイコン */
+  fill: transparent;
+  stroke: transparent;
+  touch-action: none;
+}
+
 
 .rotate-handle {
   fill: #0f0;
@@ -382,4 +392,5 @@ svg .grip {
 .canvas-wrap.scrolling svg {
   touch-action: auto;   /* 未選択時はスクロール・ピンチズーム許可 */
 }
+
 
